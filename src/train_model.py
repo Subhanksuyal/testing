@@ -12,13 +12,23 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix, roc_auc_score
 
 try:
-    from .features import add_derived_features, get_extended_features, get_base_features
+    from .features import add_derived_features, get_base_features
     from .utils import validate_fire_dataframe
 except (ImportError, ValueError):
-    from features import add_derived_features, get_extended_features, get_base_features
+    from features import add_derived_features, get_base_features
     from utils import validate_fire_dataframe
 
 DEFAULT_RISK_THRESHOLD = 0.30
+
+# Canonical 6 features in exact required order
+FEATURE_COLUMNS = [
+    'frp',
+    'confidence',
+    'industry_distance_km',
+    'forest_distance_km',
+    'persistence_days',
+    'night_flag'
+]
 
 
 def train_and_save_model():
@@ -40,14 +50,20 @@ def train_and_save_model():
 
     # Feature Engineering
     df_feat = add_derived_features(df)
-    feature_cols = get_extended_features()
     target_col = 'industrial_risk_label'
 
     if target_col not in df_feat.columns:
         raise KeyError(f"Target column '{target_col}' not found in training dataset.")
 
-    X = df_feat[feature_cols]
-    y = df_feat[target_col]
+    # Convert all feature columns strictly to float numeric
+    X = pd.DataFrame()
+    for col in FEATURE_COLUMNS:
+        if col in df_feat.columns:
+            X[col] = pd.to_numeric(df_feat[col], errors='coerce').astype(float)
+        else:
+            X[col] = np.nan
+
+    y = pd.to_numeric(df_feat[target_col], errors='coerce').astype(int)
 
     # Stratified Train/Test Split (80/20)
     X_train, X_test, y_train, y_test = train_test_split(
@@ -55,21 +71,26 @@ def train_and_save_model():
     )
 
     print(f"Training rows: {len(X_train)}, Testing rows: {len(X_test)}")
+    print(f"Features: {FEATURE_COLUMNS}")
     print(f"Positive class ratio: Train={y_train.mean():.3f}, Test={y_test.mean():.3f}")
 
     # Build Pipeline with Imputer for missing GIS / FRP values, Scaler, and RandomForest
+    imputer = SimpleImputer(strategy='median')
+    scaler = StandardScaler()
+    clf = RandomForestClassifier(
+        n_estimators=150,
+        max_depth=12,
+        min_samples_split=4,
+        min_samples_leaf=2,
+        class_weight='balanced',
+        random_state=42,
+        n_jobs=-1
+    )
+
     pipeline = Pipeline([
-        ('imputer', SimpleImputer(strategy='median')),
-        ('scaler', StandardScaler()),
-        ('clf', RandomForestClassifier(
-            n_estimators=150,
-            max_depth=12,
-            min_samples_split=4,
-            min_samples_leaf=2,
-            class_weight='balanced',
-            random_state=42,
-            n_jobs=-1
-        ))
+        ('imputer', imputer),
+        ('scaler', scaler),
+        ('clf', clf)
     ])
 
     print("Training Random Forest Classifier...")
@@ -99,15 +120,15 @@ def train_and_save_model():
 
     # Feature Importances
     rf_model = pipeline.named_steps['clf']
-    importances = {feat: round(float(imp), 4) for feat, imp in zip(feature_cols, rf_model.feature_importances_)}
+    importances = {feat: round(float(imp), 4) for feat, imp in zip(FEATURE_COLUMNS, rf_model.feature_importances_)}
     sorted_importances = dict(sorted(importances.items(), key=lambda item: item[1], reverse=True))
 
     # Save Model Artifact
     model_path = os.path.join(models_dir, 'industrial_risk_model.joblib')
     model_payload = {
         'pipeline': pipeline,
-        'features': feature_cols,
-        'base_features': get_base_features(),
+        'features': FEATURE_COLUMNS,
+        'base_features': FEATURE_COLUMNS,
         'threshold': DEFAULT_RISK_THRESHOLD,
         'training_date': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
@@ -121,8 +142,8 @@ def train_and_save_model():
         "training_date": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "training_rows": len(X_train),
         "test_rows": len(X_test),
-        "features": feature_cols,
-        "features_count": len(feature_cols),
+        "features": FEATURE_COLUMNS,
+        "features_count": len(FEATURE_COLUMNS),
         "default_threshold": DEFAULT_RISK_THRESHOLD,
         "accuracy": round(acc, 4),
         "precision": round(prec, 4),

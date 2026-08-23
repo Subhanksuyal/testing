@@ -1,6 +1,6 @@
 {
     "model_name": "RandomForestClassifier (Industrial Thermal Anomaly Risk)",
-    "training_date": "2026-08-23 19:45:40",
+    "training_date": "2026-08-23 20:08:51",
     "training_rows": 960,
     "test_rows": 240,
     "features": [
@@ -9,42 +9,32 @@
         "industry_distance_km",
         "forest_distance_km",
         "persistence_days",
-        "night_flag",
-        "industry_proximity_score",
-        "forest_proximity_score",
-        "thermal_intensity_score",
-        "confidence_score",
-        "persistence_score"
+        "night_flag"
     ],
-    "features_count": 11,
+    "features_count": 6,
     "default_threshold": 0.3,
-    "accuracy": 0.75,
-    "precision": 0.4828,
-    "recall": 0.7368,
-    "f1": 0.5833,
-    "roc_auc": 0.8282,
+    "accuracy": 0.7833,
+    "precision": 0.5275,
+    "recall": 0.8421,
+    "f1": 0.6486,
+    "roc_auc": 0.8406,
     "confusion_matrix": [
         [
-            138,
-            45
+            140,
+            43
         ],
         [
-            15,
-            42
+            9,
+            48
         ]
     ],
     "feature_importances": {
-        "industry_distance_km": 0.1859,
-        "industry_proximity_score": 0.1695,
-        "forest_distance_km": 0.1176,
-        "forest_proximity_score": 0.1097,
-        "confidence": 0.0728,
-        "frp": 0.0726,
-        "thermal_intensity_score": 0.0726,
-        "confidence_score": 0.0711,
-        "night_flag": 0.0553,
-        "persistence_score": 0.0382,
-        "persistence_days": 0.0347
+        "industry_distance_km": 0.3451,
+        "forest_distance_km": 0.2154,
+        "frp": 0.1465,
+        "confidence": 0.144,
+        "persistence_days": 0.0766,
+        "night_flag": 0.0724
     },
     "class_distribution": {
         "negative_0": 917,

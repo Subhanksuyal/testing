@@ -203,6 +203,7 @@ min_frp = st.sidebar.slider("Min FRP (MW)", 0.0, 500.0, 0.0, 10.0)
 st.sidebar.markdown("---")
 enable_clustering = st.sidebar.checkbox("Enable Map Marker Clustering", value=True)
 enable_osm_enrichment = st.sidebar.checkbox("Enable Live OSM GIS Enrichment", value=True, help="Queries OpenStreetMap Overpass for industrial and forest spatial context.")
+show_diagnostics = st.sidebar.checkbox("🔧 Show System Diagnostics", value=False, help="Display runtime versions and model diagnostic metadata.")
 
 # Manual Refresh Button
 st.sidebar.markdown("---")
@@ -230,6 +231,25 @@ with col_t2:
     else:
         st.markdown('<span class="status-badge-demo">📂 DEMO / REFERENCE DATASET</span>', unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
+
+if show_diagnostics:
+    with st.expander("🔧 Runtime & Model Diagnostics", expanded=True):
+        d_col1, d_col2, d_col3 = st.columns(3)
+        with d_col1:
+            st.write(f"**Python Version:** `{sys.version.split()[0]}`")
+            import sklearn
+            st.write(f"**scikit-learn:** `{sklearn.__version__}`")
+        with d_col2:
+            st.write(f"**pandas:** `{pd.__version__}`")
+            st.write(f"**numpy:** `{np.__version__}`")
+        with d_col3:
+            import joblib
+            st.write(f"**joblib:** `{joblib.__version__}`")
+            st.write(f"**FIRMS Key Configured:** `{'Yes' if bool(get_firms_api_key()) else 'No (Open NRT Fallback)'}`")
+        
+        if predictor:
+            st.write(f"**Model Features ({len(predictor.features)}):** `{', '.join(predictor.features)}`")
+            st.write(f"**Pipeline Steps:** `{[name for name, _ in getattr(predictor.pipeline, 'steps', [])]}`")
 
 # NASA FIRMS API Key Status Banner
 api_key = get_firms_api_key()
