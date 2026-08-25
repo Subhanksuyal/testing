@@ -202,7 +202,7 @@ min_frp = st.sidebar.slider("Min FRP (MW)", 0.0, 500.0, 0.0, 10.0)
 
 st.sidebar.markdown("---")
 enable_clustering = st.sidebar.checkbox("Enable Map Marker Clustering", value=True)
-enable_osm_enrichment = st.sidebar.checkbox("Enable Live OSM GIS Enrichment", value=True, help="Queries OpenStreetMap Overpass for industrial and forest spatial context.")
+enable_osm_enrichment = st.sidebar.checkbox("Enable Live OSM GIS Enrichment", value=False, help="Queries OpenStreetMap Overpass for industrial and forest spatial context.")
 show_diagnostics = st.sidebar.checkbox("🔧 Show System Diagnostics", value=False, help="Display runtime versions and model diagnostic metadata.")
 
 # Manual Refresh Button
